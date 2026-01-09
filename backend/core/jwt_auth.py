@@ -14,10 +14,12 @@ from sqlalchemy import and_, select
 
 from backend.models.models import User
 
-# JWT Configuration - should come from environment variables
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+# JWT Configuration - imported from config module
+from backend.core.config import (
+    JWT_SECRET_KEY,
+    JWT_ALGORITHM,
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES,
+)
 
 
 class JWTError(Exception):

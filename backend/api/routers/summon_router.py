@@ -28,16 +28,8 @@ from backend.services.summon_service import (
     SummonServiceError,
 )
 
-# Dependencies (to be implemented in actual FastAPI app)
-# These should be provided by your dependency injection system
-async def get_db() -> AsyncSession:
-    """Get database session - placeholder, implement in your FastAPI app."""
-    raise NotImplementedError("Implement get_db dependency in your FastAPI app")
-
-
-async def get_current_user() -> User:
-    """Get current authenticated user - placeholder, implement in your FastAPI app."""
-    raise NotImplementedError("Implement get_current_user dependency in your FastAPI app")
+# Import dependencies from core module
+from backend.core.dependencies import get_db, get_current_user
 
 
 router = APIRouter(prefix="/api/v1/summons", tags=["summons"])

@@ -1,0 +1,3 @@
+"""
+SquadSync Backend Package
+"""

@@ -13,7 +13,7 @@ from redis.asyncio import Redis
 class RedisClient:
     """Redis client wrapper for async operations."""
 
-    def __init__(self, redis_url: str = "redis://localhost:6379/0"):
+    def __init__(self, redis_url: str | None = None):
         """
         Initialize Redis client.
 

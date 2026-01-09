@@ -204,6 +204,17 @@ class Squad(Base):
         back_populates="squad",
         cascade="all, delete-orphan",
     )
+    events: Mapped[list["SquadEvent"]] = relationship(
+        "SquadEvent",
+        back_populates="squad",
+        cascade="all, delete-orphan",
+    )
+    daily_goal: Mapped[Optional["SquadDailyGoal"]] = relationship(
+        "SquadDailyGoal",
+        back_populates="squad",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Squad(id={self.id}, name={self.name}, team_id={self.team_id})>"
@@ -558,3 +569,155 @@ class SummonResponse(Base):
 
     def __repr__(self) -> str:
         return f"<SummonResponse(id={self.id}, summon_id={self.summon_id}, user_id={self.user_id}, response_type={self.response_type})>"
+
+
+class SquadEvent(Base):
+    """Squad calendar event model - squad-only scheduling."""
+
+    __tablename__ = "squad_event"
+
+    id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+        index=True,
+    )
+    squad_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("squad.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_by_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("app_user.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    start_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+    end_time: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+    )
+    event_type: Mapped[str] = mapped_column(
+        String(50),
+        default="general",
+        nullable=False,
+        index=True,
+    )  # e.g., "practice", "match", "meeting", "general"
+    location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    is_all_day: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_recurring: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    recurrence_pattern: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )  # e.g., "daily", "weekly", "monthly"
+    metadata: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )  # For future analytics and extensibility
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+        index=True,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # Relationships
+    squad: Mapped["Squad"] = relationship(
+        "Squad",
+        back_populates="events",
+    )
+    created_by: Mapped[Optional["User"]] = relationship(
+        "User",
+        foreign_keys=[created_by_id],
+    )
+
+    def __repr__(self) -> str:
+        return f"<SquadEvent(id={self.id}, squad_id={self.squad_id}, title={self.title}, start_time={self.start_time})>"
+
+
+class SquadDailyGoal(Base):
+    """Squad daily goal model - single active goal per squad."""
+
+    __tablename__ = "squad_daily_goal"
+
+    id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+        index=True,
+    )
+    squad_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("squad.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )  # Unique constraint ensures one active goal per squad
+    created_by_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("app_user.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    goal_text: Mapped[str] = mapped_column(Text, nullable=False)
+    target_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )  # Date this goal is for
+    is_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_by_id: Mapped[Optional[UUID]] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("app_user.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    metadata: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )  # For future analytics
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+        index=True,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # Relationships
+    squad: Mapped["Squad"] = relationship(
+        "Squad",
+        back_populates="daily_goal",
+    )
+    created_by: Mapped[Optional["User"]] = relationship(
+        "User",
+        foreign_keys=[created_by_id],
+    )
+    completed_by: Mapped[Optional["User"]] = relationship(
+        "User",
+        foreign_keys=[completed_by_id],
+    )
+
+    def __repr__(self) -> str:
+        return f"<SquadDailyGoal(id={self.id}, squad_id={self.squad_id}, target_date={self.target_date})>"

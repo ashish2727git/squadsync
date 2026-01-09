@@ -23,10 +23,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# Dependency to get database session - should be provided by your FastAPI app
-async def get_db() -> AsyncSession:
-    """Get database session - placeholder, implement in your FastAPI app."""
-    raise NotImplementedError("Implement get_db dependency in your FastAPI app")
+# Import dependencies from core module
+from backend.core.dependencies import get_db
 
 
 # Factory function for WebSocket manager
@@ -34,25 +32,24 @@ async def get_db() -> AsyncSession:
 _websocket_manager_factory: Optional[Callable[[], WebSocketManager]] = None
 
 
+def set_websocket_manager_factory(factory: Callable[[], WebSocketManager]) -> None:
+    """
+    Set WebSocket manager factory function.
+    
+    Call this at app startup to inject the manager factory.
+    """
+    global _websocket_manager_factory
+    _websocket_manager_factory = factory
+
+
 def set_websocket_manager(manager: WebSocketManager) -> None:
     """
-    Set WebSocket manager instance.
+    Set WebSocket manager instance (convenience wrapper).
     
     Call this at app startup to inject the manager instance.
     This avoids global variables while maintaining singleton pattern.
-    
-    Example:
-        from backend.core.websocket_manager import WebSocketManager
-        from backend.core.redis_client import get_redis
-        
-        @app.on_event("startup")
-        async def startup():
-            redis = await get_redis()
-            manager = WebSocketManager(redis)
-            set_websocket_manager(manager)
     """
-    global _websocket_manager_factory
-    _websocket_manager_factory = lambda: manager
+    set_websocket_manager_factory(lambda: manager)
 
 
 async def get_websocket_manager() -> WebSocketManager:
