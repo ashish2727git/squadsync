@@ -222,7 +222,7 @@ class SquadScheduleService:
             event.recurrence_pattern = recurrence_pattern
         if metadata is not None:
             # Merge metadata
-            event.metadata = {**event.metadata, **metadata}
+            event.event_metadata = {**event.event_metadata, **metadata}
         if is_active is not None:
             event.is_active = is_active
 
@@ -418,7 +418,7 @@ class SquadScheduleService:
             goal.goal_text = goal_text
             goal.target_date = target_date
             if metadata:
-                goal.metadata = {**goal.metadata, **metadata}
+                goal.goal_metadata = {**goal.goal_metadata, **metadata}
             goal.updated_at = datetime.now(timezone.utc)
         else:
             # Create new goal
@@ -521,7 +521,7 @@ class SquadScheduleService:
                 goal.completed_at = None
                 goal.completed_by_id = None
         if metadata is not None:
-            goal.metadata = {**goal.metadata, **metadata}
+            goal.goal_metadata = {**goal.goal_metadata, **metadata}
 
         goal.updated_at = datetime.now(timezone.utc)
         await self.db.flush()

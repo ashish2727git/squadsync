@@ -3,6 +3,17 @@ SquadSync FastAPI Application
 Main entry point for the SquadSync gaming platform.
 """
 
+import sys
+import os
+from pathlib import Path
+
+# Add project root to Python path for subprocess compatibility
+# This ensures imports work when uvicorn spawns subprocesses
+_backend_dir = Path(__file__).parent.absolute()
+_project_root = _backend_dir.parent.absolute()
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 import logging
 from contextlib import asynccontextmanager
 

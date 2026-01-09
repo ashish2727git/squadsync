@@ -521,7 +521,7 @@ async def _event_to_detail(db: AsyncSession, event: SquadEvent) -> SquadEventDet
         is_all_day=event.is_all_day,
         is_recurring=event.is_recurring,
         recurrence_pattern=event.recurrence_pattern,
-        metadata=event.metadata,
+        metadata=event.event_metadata,
         is_active=event.is_active,
         created_at=event.created_at,
         updated_at=event.updated_at,
@@ -550,7 +550,7 @@ async def _goal_to_detail(db: AsyncSession, goal: SquadDailyGoal) -> SquadDailyG
         completed_at=goal.completed_at,
         completed_by_id=goal.completed_by_id,
         completed_by_username=goal.completed_by.username if goal.completed_by else None,
-        metadata=goal.metadata,
+        metadata=goal.goal_metadata,
         created_at=goal.created_at,
         updated_at=goal.updated_at,
     )

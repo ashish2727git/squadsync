@@ -237,10 +237,10 @@ async def get_summon_responses(
 )
 async def get_squad_summons(
     squad_id: UUID,
-    page: int = 1,
-    page_size: int = 20,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    page: int = 1,
+    page_size: int = 20,
 ) -> SummonListResponse:
     """
     Get all summons for a squad with pagination.

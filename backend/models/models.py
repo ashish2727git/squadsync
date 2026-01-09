@@ -618,9 +618,9 @@ class SquadEvent(Base):
     recurrence_pattern: Mapped[Optional[str]] = mapped_column(
         String(100), nullable=True
     )  # e.g., "daily", "weekly", "monthly"
-    metadata: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )  # For future analytics and extensibility
+    event_metadata: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, name="metadata"
+    )  # For future analytics and extensibility (DB column: metadata)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -689,9 +689,9 @@ class SquadDailyGoal(Base):
         nullable=True,
         index=True,
     )
-    metadata: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )  # For future analytics
+    goal_metadata: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, name="metadata"
+    )  # For future analytics (DB column: metadata)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
