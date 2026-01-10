@@ -21,10 +21,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.core.config import ALLOWED_ORIGINS, ENVIRONMENT, LOG_LEVEL
+from backend.core.config import (
+    ALLOWED_ORIGINS,
+    ENVIRONMENT,
+    LOG_LEVEL,
+    RATE_LIMIT_REQUESTS_PER_DAY,
+    RATE_LIMIT_REQUESTS_PER_HOUR,
+    RATE_LIMIT_REQUESTS_PER_MINUTE,
+)
+from backend.core.rate_limit import RateLimitMiddleware
 from backend.core.redis_client import get_redis
 from backend.core.websocket_manager import WebSocketManager
-from backend.api.routers import summon_router, squad_schedule_router
+from backend.api.routers import auth_router, summon_router, squad_schedule_router, vault_router
 from backend.api.gateway import websocket_gateway
 
 # Configure logging
@@ -105,6 +113,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Rate limiting middleware (must be before CORS)
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=RATE_LIMIT_REQUESTS_PER_MINUTE,
+    requests_per_hour=RATE_LIMIT_REQUESTS_PER_HOUR,
+    requests_per_day=RATE_LIMIT_REQUESTS_PER_DAY,
+    exempt_paths=["/health", "/ready", "/docs", "/openapi.json", "/redoc"],
+)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -127,8 +144,10 @@ async def global_exception_handler(request, exc):
     )
 
 # Include routers
+app.include_router(auth_router.router)  # Auth endpoints already have /api/v1/auth prefix
 app.include_router(summon_router.router, prefix="/api/v1")
 app.include_router(squad_schedule_router.router, prefix="/api/v1")
+app.include_router(vault_router.router)  # Vault endpoints already have /api/v1/vault prefix
 app.include_router(websocket_gateway.router)
 
 # Health check endpoints

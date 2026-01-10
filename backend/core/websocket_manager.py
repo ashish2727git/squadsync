@@ -300,6 +300,31 @@ class WebSocketManager:
             del self._connections[user_id]
             logger.info(f"User {user_id} disconnected from WebSocket")
 
+    async def subscribe_to_channel(
+        self,
+        user_id: UUID,
+        channel: str,
+    ) -> bool:
+        """
+        Subscribe a user to a custom channel.
+
+        Args:
+            user_id: User UUID
+            channel: Channel name
+
+        Returns:
+            True if subscription successful, False otherwise
+        """
+        async with self._lock:
+            if user_id not in self._connections:
+                return False
+
+            conn = self._connections[user_id]
+            success = await conn.subscribe_to_channel(channel)
+            if success:
+                self._channel_subscribers[channel].add(user_id)
+            return success
+
     async def subscribe_to_squad(
         self,
         user_id: UUID,

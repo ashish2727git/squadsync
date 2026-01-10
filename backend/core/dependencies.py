@@ -1,16 +1,17 @@
 """
 Centralized FastAPI dependencies for authentication and database.
+Production-grade authentication with no development bypasses.
 """
 
 import os
-import warnings
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from backend.core.jwt_auth import get_user_from_token, InvalidToken, ExpiredToken
+from backend.core.auth import InvalidToken, ExpiredToken, get_user_from_token
+from backend.core.config import ENVIRONMENT
 from backend.models.models import User
 
 # Database setup
@@ -36,8 +37,14 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+# OAuth2 Password Bearer for token extraction
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/auth/login",
+    auto_error=False,
+)
+
 # HTTP Bearer token security
-security = HTTPBearer(auto_error=False)
+security = HTTPBearer(auto_error=True)  # Require auth by default
 
 
 async def get_db() -> AsyncSession:
@@ -56,47 +63,22 @@ async def get_db() -> AsyncSession:
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)] = None,
-    db: Annotated[AsyncSession, Depends(get_db)] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """
-    Get current authenticated user from JWT token.
+    Get current authenticated user from JWT access token.
     
-    For development/testing: If no token provided, returns a mock user.
-    WARNING: Remove mock user in production!
+    Production-grade authentication with no development bypasses.
+    All endpoints using this dependency require valid authentication.
     
     Raises:
-        HTTPException: If token is invalid or user not found
+        HTTPException: If token is invalid, expired, or user not found
     """
-    # Development mode: Allow requests without auth (REMOVE IN PRODUCTION!)
-    if not credentials:
-        if os.getenv("ENVIRONMENT") == "development":
-            warnings.warn(
-                "⚠️  DEVELOPMENT MODE: Allowing unauthenticated requests. "
-                "This is INSECURE and must be removed in production!",
-                UserWarning
-            )
-            # Create a mock user for development
-            # In production, this should raise HTTPException
-            from uuid import UUID
-            mock_user = User(
-                id=UUID("00000000-0000-0000-0000-000000000001"),
-                username="dev_user",
-                email="dev@example.com",
-                is_active=True,
-            )
-            return mock_user
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    
     token = credentials.credentials
     
     try:
-        user = await get_user_from_token(db, token)
+        user = await get_user_from_token(db, token, token_type="access")
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -115,5 +97,15 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except Exception as e:
+        # Log unexpected errors but don't expose details
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error in get_current_user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed",
             headers={"WWW-Authenticate": "Bearer"},
         )

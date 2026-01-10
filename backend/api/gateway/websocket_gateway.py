@@ -13,7 +13,7 @@ from typing import Callable, Optional
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.jwt_auth import ExpiredToken, InvalidToken, extract_token_from_query, get_user_from_token
+from backend.core.auth import ExpiredToken, InvalidToken, get_user_from_token
 from backend.core.redis_client import RedisClient, get_redis
 from backend.core.websocket_manager import WebSocketConnection, WebSocketManager
 from backend.models.models import User
@@ -69,36 +69,94 @@ async def get_websocket_manager() -> WebSocketManager:
     return _websocket_manager_factory()
 
 
+def extract_token_from_query(query_string: str) -> Optional[str]:
+    """
+    Extract JWT token from WebSocket query string.
+
+    Args:
+        query_string: URL query string (e.g., "token=xyz&other=value")
+
+    Returns:
+        Token string if found, None otherwise
+    """
+    if not query_string:
+        return None
+
+    params = {}
+    for param in query_string.split("&"):
+        if "=" in param:
+            key, value = param.split("=", 1)
+            params[key] = value
+
+    return params.get("token") or params.get("access_token")
+
+
 async def authenticate_websocket(
     websocket: WebSocket,
     query_string: str,
     db: AsyncSession,
 ) -> Optional[User]:
     """
-    Authenticate WebSocket connection via JWT token.
+    Authenticate WebSocket connection via JWT access token.
+
+    Production-grade authentication: requires valid JWT access token.
+    Token can be provided via:
+    1. Query parameter: ?token=<jwt_token>
+    2. Initial WebSocket message (preferred for security)
 
     Args:
         websocket: WebSocket connection
-        query_string: URL query string containing token
+        query_string: URL query string containing token (legacy support)
         db: Database session
 
     Returns:
         User object if authenticated, None otherwise
     """
-    token = extract_token_from_query(query_string)
+    token = None
+    
+    # Try to get token from query string (legacy support)
+    if query_string:
+        token = extract_token_from_query(query_string)
+    
+    # If no token in query, try to get from initial message (more secure)
     if not token:
+        try:
+            # Accept connection first to receive message
+            await websocket.accept()
+            
+            # Wait for auth message (timeout: 5 seconds)
+            message = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
+            try:
+                auth_data = json.loads(message)
+                token = auth_data.get("token") or auth_data.get("access_token")
+            except json.JSONDecodeError:
+                pass
+        except asyncio.TimeoutError:
+            pass
+        except Exception:
+            pass
+    
+    # If still no token, reject connection
+    if not token:
+        if websocket.client_state.name != "CONNECTED":
+            await websocket.accept()
         await websocket.close(code=1008, reason="Missing authentication token")
         logger.warning("WebSocket connection rejected: no token provided")
         return None
 
     try:
-        user = await get_user_from_token(db, token)
+        # Validate token and get user
+        user = await get_user_from_token(db, token, token_type="access")
         if not user:
+            if websocket.client_state.name != "CONNECTED":
+                await websocket.accept()
             await websocket.close(code=1008, reason="Invalid or expired token")
             logger.warning(f"WebSocket connection rejected: invalid token")
             return None
 
         if not user.is_active:
+            if websocket.client_state.name != "CONNECTED":
+                await websocket.accept()
             await websocket.close(code=1008, reason="User account is inactive")
             logger.warning(f"WebSocket connection rejected: inactive user {user.id}")
             return None
@@ -106,11 +164,15 @@ async def authenticate_websocket(
         return user
 
     except (InvalidToken, ExpiredToken) as e:
+        if websocket.client_state.name != "CONNECTED":
+            await websocket.accept()
         await websocket.close(code=1008, reason=str(e))
         logger.warning(f"WebSocket connection rejected: {e}")
         return None
     except Exception as e:
         logger.error(f"Error authenticating WebSocket: {e}", exc_info=True)
+        if websocket.client_state.name != "CONNECTED":
+            await websocket.accept()
         await websocket.close(code=1011, reason="Internal server error")
         return None
 
@@ -118,7 +180,6 @@ async def authenticate_websocket(
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    token: str = Query(..., description="JWT authentication token"),
     db: AsyncSession = Depends(get_db),
     manager: WebSocketManager = Depends(get_websocket_manager),
 ):
@@ -126,10 +187,14 @@ async def websocket_endpoint(
     Main WebSocket endpoint for realtime communication.
 
     Authentication:
-    - Requires JWT token in query parameter: ?token=<jwt_token>
+    - Requires JWT access token
+    - Token can be provided via:
+      1. Query parameter: ?token=<jwt_token> (legacy, less secure)
+      2. Initial message: {"token": "<jwt_token>"} (preferred)
     - Token must be valid and user must be active
 
     Message Protocol:
+    - First message (if not using query param): {"token": "<jwt_token>"}
     - Client can send JSON messages with 'type' field:
         - 'subscribe_squad': {"type": "subscribe_squad", "squad_id": "uuid"}
         - 'unsubscribe_squad': {"type": "unsubscribe_squad", "squad_id": "uuid"}
@@ -152,10 +217,14 @@ async def websocket_endpoint(
     # Extract query string from websocket URL
     query_string = websocket.url.query
 
-    # Authenticate user
+    # Authenticate user (handles connection acceptance internally)
     user = await authenticate_websocket(websocket, query_string, db)
     if not user:
         return  # Connection already closed in authenticate_websocket
+    
+    # Ensure connection is accepted
+    if websocket.client_state.name != "CONNECTED":
+        await websocket.accept()
 
     connection: Optional[WebSocketConnection] = None
 
@@ -247,6 +316,47 @@ async def websocket_endpoint(
                             "message": f"Invalid squad_id format: {squad_id_str}",
                         })
 
+                elif message_type == "subscribe_whiteboard":
+                    squad_id_str = data.get("squad_id")
+                    if not squad_id_str:
+                        await connection.send_json({
+                            "type": "error",
+                            "message": "subscribe_whiteboard requires 'squad_id'",
+                        })
+                        continue
+
+                    try:
+                        squad_id = UUID(squad_id_str)
+                        # Verify access
+                        from backend.core.permissions import can_access_squad
+                        can_access = await can_access_squad(db, user, squad_id)
+                        if not can_access:
+                            await connection.send_json({
+                                "type": "error",
+                                "message": f"Access denied to squad {squad_id}",
+                            })
+                            continue
+
+                        # Subscribe to whiteboard channel via connection
+                        whiteboard_channel = f"squad:{squad_id}:whiteboard"
+                        success = await connection.subscribe_to_channel(whiteboard_channel)
+                        if success:
+                            await connection.send_json({
+                                "type": "subscribed",
+                                "channel": whiteboard_channel,
+                                "squad_id": str(squad_id),
+                            })
+                        else:
+                            await connection.send_json({
+                                "type": "error",
+                                "message": f"Failed to subscribe to whiteboard for squad {squad_id}",
+                            })
+                    except ValueError:
+                        await connection.send_json({
+                            "type": "error",
+                            "message": f"Invalid squad_id format: {squad_id_str}",
+                        })
+
                 elif message_type == "subscribe_summon":
                     summon_id_str = data.get("summon_id")
                     if not summon_id_str:
@@ -302,6 +412,68 @@ async def websocket_endpoint(
                 elif message_type == "ping":
                     # Respond to keepalive ping
                     await connection.send_json({"type": "pong"})
+
+                elif message_type in ["draw_start", "draw_move", "draw_end", "clear"]:
+                    # Whiteboard drawing events - validate and broadcast
+                    squad_id_str = data.get("squad_id") or data.get("room_id")
+                    if not squad_id_str:
+                        await connection.send_json({
+                            "type": "error",
+                            "message": f"{message_type} requires 'squad_id' or 'room_id'",
+                        })
+                        continue
+
+                    try:
+                        squad_id = UUID(squad_id_str)
+                        # Verify user has access to squad
+                        from backend.core.permissions import can_access_squad
+                        can_access = await can_access_squad(db, user, squad_id)
+                        if not can_access:
+                            await connection.send_json({
+                                "type": "error",
+                                "message": f"Access denied to squad {squad_id}",
+                            })
+                            continue
+
+                        # Broadcast to squad whiteboard channel
+                        redis = await get_redis()
+                        whiteboard_channel = f"squad:{squad_id}:whiteboard"
+                        await redis.publish(whiteboard_channel, {
+                            **data,
+                            "user_id": str(user.id),
+                            "username": user.username,
+                        })
+                    except ValueError:
+                        await connection.send_json({
+                            "type": "error",
+                            "message": f"Invalid squad_id format: {squad_id_str}",
+                        })
+
+                elif message_type in ["webrtc_offer", "webrtc_answer", "webrtc_ice"]:
+                    # WebRTC signaling events - validate and forward
+                    target_user_id_str = data.get("target_user_id")
+                    if not target_user_id_str:
+                        await connection.send_json({
+                            "type": "error",
+                            "message": f"{message_type} requires 'target_user_id'",
+                        })
+                        continue
+
+                    try:
+                        target_user_id = UUID(target_user_id_str)
+                        # Forward to target user's personal channel
+                        redis = await get_redis()
+                        target_channel = f"user:{target_user_id}:webrtc"
+                        await redis.publish(target_channel, {
+                            **data,
+                            "from_user_id": str(user.id),
+                            "from_username": user.username,
+                        })
+                    except ValueError:
+                        await connection.send_json({
+                            "type": "error",
+                            "message": f"Invalid target_user_id format: {target_user_id_str}",
+                        })
 
                 else:
                     await connection.send_json({
