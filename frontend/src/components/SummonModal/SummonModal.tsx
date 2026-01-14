@@ -9,7 +9,7 @@ import './SummonModal.css';
 
 export const SummonModal: React.FC<SummonModalProps> = ({
   summon,
-  userId,
+  // userId,
   apiBaseUrl,
   authToken,
   onResponseSubmitted,
@@ -73,8 +73,9 @@ export const SummonModal: React.FC<SummonModalProps> = ({
           throw new Error(errorData.detail || `HTTP ${response.status}`);
         }
 
-        const responseData = await response.json();
-        
+        // const responseData = await response.json();
+        await response.json();
+
         // Call callback to notify parent
         onResponseSubmitted(summon.id, responseType);
       } catch (err) {

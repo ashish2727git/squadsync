@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { apiClient } from '../api/client'
+// import { apiClient } from '../api/client'
 import './DashboardPage.css'
 
 interface Squad {
@@ -13,7 +13,7 @@ interface Squad {
 
 export function DashboardPage() {
   const { user } = useAuthStore()
-  const [squads, setSquads] = useState<Squad[]>([])
+  const [squads] = useState<Squad[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

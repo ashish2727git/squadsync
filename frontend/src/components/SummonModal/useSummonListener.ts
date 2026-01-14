@@ -15,7 +15,7 @@ interface UseSummonListenerOptions {
  * Hook to listen for summon notifications via WebSocket
  */
 export function useSummonListener(options: UseSummonListenerOptions) {
-  const { socket, userId, onSummonReceived } = options;
+  const { socket, onSummonReceived } = options;
   const [activeSummon, setActiveSummon] = useState<SummonData | null>(null);
 
   const handleMessage = useCallback(

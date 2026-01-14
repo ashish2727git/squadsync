@@ -8,6 +8,8 @@ import './WarRoomPage.css'
 export function WarRoomPage() {
   const { squadId } = useParams<{ squadId: string }>()
   const { user } = useAuthStore()
+  const userId = user?.id || "";
+  const username = user?.username || "";
   const [socket, setSocket] = useState<WebSocket | null>(null)
   const [connected, setConnected] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -49,17 +51,20 @@ export function WarRoomPage() {
   }, [user, squadId])
 
   // WebRTC signaling
-  const { localStream, remoteStreams, startCall, endCall } = useWebRTCSignaling({
-    socket: socket!,
-    userId: user?.id || '',
-    roomId: squadId || '',
-  })
+  useWebRTCSignaling({
+  socket: socket!,
+  userId,
+  username,
+  roomId: squadId || "",
+});
 
-  useEffect(() => {
-    if (localStream && videoRef.current) {
-      videoRef.current.srcObject = localStream
-    }
-  }, [localStream])
+
+
+  // useEffect(() => {
+  //   if (localStream && videoRef.current) {
+  //     videoRef.current.srcObject = localStream
+  //   }
+  // }, [localStream])
 
   return (
     <div className="war-room-page">
@@ -94,10 +99,10 @@ export function WarRoomPage() {
             <h2>Voice Chat</h2>
             <div className="video-container">
               <video ref={videoRef} autoPlay muted playsInline />
-              <div className="video-controls">
+              {/* <div className="video-controls">
                 <button onClick={startCall}>Start Call</button>
                 <button onClick={endCall}>End Call</button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

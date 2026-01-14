@@ -9,6 +9,7 @@ export interface SignalingMessage {
   roomId: string; // War room ID
   payload: SignalingPayload;
   timestamp: number;
+  
 }
 
 export type SignalingMessageType =

@@ -6,6 +6,7 @@ Production-grade configuration with strict validation.
 import os
 import sys
 import warnings
+print("DEBUG REDIS_URL =", os.environ.get("REDIS_URL"))
 
 # Environment - must be one of: development, staging, production
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
@@ -39,7 +40,11 @@ if ENVIRONMENT == "production":
         sys.exit("CRITICAL: JWT_SECRET_KEY must be at least 32 characters in production!")
 
 # Redis
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.environ.get("REDIS_URL")
+
+if not REDIS_URL:
+    raise ValueError("REDIS_URL environment variable is not set")
+
 
 # CORS
 ALLOWED_ORIGINS = os.getenv(

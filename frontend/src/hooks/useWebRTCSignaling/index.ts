@@ -11,4 +11,5 @@ export type {
   SignalingMessageType,
   SignalingPayload,
   WebRTCConfig,
-} from './types';
+}
+  from './types';

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { apiClient } from '../api/client'
-import { SummonModal } from '../components/SummonModal'
+import { SummonData, SummonModal } from '../components/SummonModal'
 import './SquadDetailPage.css'
 
 interface Summon {
@@ -89,8 +89,8 @@ export function SquadDetailPage() {
             id: activeSummon.id,
             title: activeSummon.title,
             description: activeSummon.description,
-            expires_at: null,
-          }}
+            expires_at: undefined,
+          }as SummonData}
           userId={user?.id || ''}
           apiBaseUrl={import.meta.env.VITE_API_URL || 'http://localhost:8000'}
           authToken={useAuthStore.getState().accessToken || ''}

@@ -6,6 +6,8 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { DrawingPath, DrawingEvent, Point } from '../types';
 import { throttle } from '../utils/throttle';
+// import throttle from "lodash/throttle";
+
 
 interface UseWhiteboardSyncOptions {
   socket: WebSocket;
@@ -87,12 +89,17 @@ export function useWhiteboardSync(options: UseWhiteboardSyncOptions) {
     }
   }, [socket]);
 
-  // Create throttled version of sendDrawingEvent for move events
-  const throttledSendMove = useRef(
-    throttle((event: DrawingEvent) => {
+  // Create throttled sender for move events
+const throttledSendMove = useRef<((event: DrawingEvent) => void) | null>(null);
+
+useEffect(() => {
+  throttledSendMove.current = throttle(
+    (event: DrawingEvent) => {
       sendDrawingEvent(event);
-    }, throttleMs)
+    },
+    throttleMs
   );
+}, [sendDrawingEvent, throttleMs]);
 
   /**
    * Broadcast drawing start event
@@ -125,7 +132,7 @@ export function useWhiteboardSync(options: UseWhiteboardSyncOptions) {
       point,
       timestamp: Date.now(),
     };
-    throttledSendMove.current(event);
+    throttledSendMove.current?.(event);
   }, [userId, username]);
 
   /**
@@ -133,7 +140,20 @@ export function useWhiteboardSync(options: UseWhiteboardSyncOptions) {
    */
   const broadcastDrawEnd = useCallback((pathId: string) => {
     // Flush any pending move events first
-    throttledSendMove.current.cancel();
+    
+
+        // const throttledSendMove = useRef<ReturnType<typeof throttle>>();
+
+        // throttledSendMove.current = throttle(() => {
+        //   // emit drawing move (no unused args)
+        // }, 16);
+
+        // cleanup
+        // if (throttledSendMove.current) {
+        //   // throttledSendMove.current.cancel();
+        // }
+
+
     
     const event: DrawingEvent = {
       type: 'draw_end',

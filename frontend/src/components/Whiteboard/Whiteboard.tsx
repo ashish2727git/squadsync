@@ -215,15 +215,20 @@ export const Whiteboard: React.FC<WhiteboardProps> = ({
   });
 
   // Mouse/touch event handlers
-  const handleStart = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+const handleStart = useCallback(
+  (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const point = drawing.getPointFromEvent(e);
     if (point) {
       drawing.startDrawing(point, userId, username);
     }
-  }, [drawing, userId, username]);
+  },
+  [drawing, userId, username]
+);
 
-  const handleMove = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+
+  const handleMove = useCallback(
+  (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     if (drawing.isDrawing()) {
       const point = drawing.getPointFromEvent(e);
@@ -231,12 +236,19 @@ export const Whiteboard: React.FC<WhiteboardProps> = ({
         drawing.continueDrawing(point);
       }
     }
-  }, [drawing]);
+  },
+  [drawing]
+);
 
-  const handleEnd = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+
+const handleEnd = useCallback(
+  (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     drawing.stopDrawing();
-  }, [drawing]);
+  },
+  [drawing]
+);
+
 
   // Handle mouse leave to stop drawing
   const handleLeave = useCallback(() => {
@@ -283,18 +295,16 @@ export const Whiteboard: React.FC<WhiteboardProps> = ({
       <canvas
         ref={canvasRef}
         className="whiteboard-canvas"
-        onMouseDown={handleStart}
-        onMouseMove={handleMove}
-        onMouseUp={handleEnd}
-        onMouseLeave={handleLeave}
-        onTouchStart={handleStart}
-        onTouchMove={handleMove}
-        onTouchEnd={handleEnd}
+        onPointerDown={handleStart}
+        onPointerMove={handleMove}
+        onPointerUp={handleEnd}
+        onPointerLeave={handleLeave}
         style={{
           cursor: 'crosshair',
           touchAction: 'none',
-        }}
-      />
+  }}
+/>
+
     </div>
   );
 };
