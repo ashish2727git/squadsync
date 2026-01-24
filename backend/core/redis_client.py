@@ -115,7 +115,10 @@ class RedisClient:
 
 
 # Global Redis client instance
-redis_client = RedisClient()
+# Global Redis client instance
+redis_client = RedisClient(
+    redis_url=os.environ.get("REDIS_URL")
+)
 
 
 async def get_redis() -> RedisClient:

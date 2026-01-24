@@ -26,6 +26,11 @@ def hash_password(password: str) -> str:
     Raises:
         ValueError: If password is empty or None
     """
+    # bcrypt limit safeguard
+    if len(password.encode("utf-8")) > 72:
+        raise ValueError("Password too long (max 72 bytes)")
+
+
     if not password:
         raise ValueError("Password cannot be empty")
     
