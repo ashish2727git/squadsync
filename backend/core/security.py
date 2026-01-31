@@ -7,15 +7,13 @@ import re
 from typing import Optional
 
 import bcrypt
-from passlib.context import CryptContext
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 
 
 def hash_password(password: str) -> str:
     """
-    Hash a password using bcrypt with passlib.
+    Hash a password using bcrypt directly.
+    
+    Bcrypt has a 72-byte limit, so we truncate passwords to ensure compatibility.
 
     Args:
         password: Plain text password
@@ -26,15 +24,16 @@ def hash_password(password: str) -> str:
     Raises:
         ValueError: If password is empty or None
     """
-    # bcrypt limit safeguard
-    if len(password.encode("utf-8")) > 72:
-        raise ValueError("Password too long (max 72 bytes)")
-
-
     if not password:
         raise ValueError("Password cannot be empty")
     
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -52,7 +51,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
     
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        password_bytes = plain_password.encode("utf-8")
+        if len(password_bytes) > 72:
+            password_bytes = password_bytes[:72]
+        return bcrypt.checkpw(password_bytes, hashed_password.encode("utf-8"))
     except Exception:
         return False
 
@@ -63,6 +65,7 @@ def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
 
     Requirements:
     - Minimum 8 characters
+    - Maximum 72 characters (bcrypt limit)
     - At least one uppercase letter
     - At least one lowercase letter
     - At least one digit
@@ -77,8 +80,8 @@ def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
     
-    if len(password) > 128:
-        return False, "Password must be no more than 128 characters long"
+    if len(password) > 72:
+        return False, "Password must be no more than 72 characters long"
     
     if not re.search(r"[A-Z]", password):
         return False, "Password must contain at least one uppercase letter"
@@ -111,17 +114,14 @@ def sanitize_username(username: str) -> str:
     if not username:
         raise ValueError("Username cannot be empty")
     
-    # Strip whitespace
     username = username.strip()
     
-    # Validate length
     if len(username) < 3:
         raise ValueError("Username must be at least 3 characters long")
     
     if len(username) > 50:
         raise ValueError("Username must be no more than 50 characters long")
     
-    # Only allow alphanumeric, underscore, hyphen
     if not re.match(r"^[a-zA-Z0-9_-]+$", username):
         raise ValueError("Username can only contain letters, numbers, underscores, and hyphens")
     
@@ -144,15 +144,12 @@ def sanitize_email(email: str) -> str:
     if not email:
         raise ValueError("Email cannot be empty")
     
-    # Strip and lowercase
     email = email.strip().lower()
     
-    # Basic email validation
     email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     if not re.match(email_pattern, email):
         raise ValueError("Invalid email format")
     
-    # Length check
     if len(email) > 255:
         raise ValueError("Email must be no more than 255 characters long")
     

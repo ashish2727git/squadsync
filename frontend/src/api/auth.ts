@@ -1,4 +1,4 @@
-import api, { apiClient } from "./client";
+import { apiClient } from "./client";
 
 export const login = async (email: string, password: string) => {
   const res = await apiClient.post("/api/v1/auth/login", {

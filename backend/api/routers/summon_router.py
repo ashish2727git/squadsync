@@ -35,6 +35,60 @@ from backend.core.dependencies import get_db, get_current_user
 router = APIRouter(prefix="/api/v1/summons", tags=["summons"])
 
 
+@router.get(
+    "/active",
+    response_model=list[SummonDetail],
+    summary="Get active summons for current user",
+    description="Get all active summons for squads the current user is a member of.",
+)
+async def get_active_summons(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> list[SummonDetail]:
+    """
+    Get all active summons for the current user's squads.
+    
+    Returns summons where:
+    - User is a member of the squad
+    - Summon status is ACTIVE
+    - Summon hasn't expired
+    """
+    from backend.models.models import squad_membership_table, Squad
+    from datetime import datetime, timezone
+    
+    # Get user's squad IDs
+    squad_stmt = (
+        select(squad_membership_table.c.squad_id)
+        .where(squad_membership_table.c.user_id == current_user.id)
+        .where(squad_membership_table.c.is_active == True)
+    )
+    squad_result = await db.execute(squad_stmt)
+    squad_ids = [row[0] for row in squad_result.all()]
+    
+    if not squad_ids:
+        return []
+    
+    # Get active summons for these squads
+    now = datetime.now(timezone.utc)
+    summons_stmt = (
+        select(Summon)
+        .where(Summon.squad_id.in_(squad_ids))
+        .where(Summon.status == "ACTIVE")
+        .where((Summon.expires_at == None) | (Summon.expires_at > now))
+        .order_by(Summon.created_at.desc())
+    )
+    summons_result = await db.execute(summons_stmt)
+    summons = summons_result.scalars().all()
+    
+    # Convert to detail models
+    summon_details = []
+    for summon in summons:
+        detail = await _summon_to_detail(db, summon, current_user)
+        summon_details.append(detail)
+    
+    return summon_details
+
+
 @router.post(
     "/",
     response_model=SummonDetail,

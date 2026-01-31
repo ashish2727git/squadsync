@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SquadSync Icon Generator</title>
+<style>
+body { font-family: Arial; padding: 20px; background: #f5f7fa; }
+.icon { margin: 10px; display: inline-block; }
+canvas { border: 2px solid #ddd; border-radius: 10px; }
+.info { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+button { background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+button:hover { background: #764ba2; }
+</style>
+</head>
+<body>
+<div class="info">
+<h1>🎮 SquadSync Icon Generator</h1>
+<p>Click the button below to generate and download all PWA icons.</p>
+<button onclick="generateAllIcons()">Generate All Icons</button>
+</div>
+<div id="icons"></div>
+
+<script>
+const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+function generateIcon(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  
+  // Gradient background
+  const gradient = ctx.createLinearGradient(0, 0, size, size);
+  gradient.addColorStop(0, '#667eea');
+  gradient.addColorStop(1, '#764ba2');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  
+  // Add rounded corners
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.beginPath();
+  ctx.moveTo(size * 0.2, 0);
+  ctx.lineTo(size * 0.8, 0);
+  ctx.quadraticCurveTo(size, 0, size, size * 0.2);
+  ctx.lineTo(size, size * 0.8);
+  ctx.quadraticCurveTo(size, size, size * 0.8, size);
+  ctx.lineTo(size * 0.2, size);
+  ctx.quadraticCurveTo(0, size, 0, size * 0.8);
+  ctx.lineTo(0, size * 0.2);
+  ctx.quadraticCurveTo(0, 0, size * 0.2, 0);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // Add "SS" text
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${size * 0.4}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SS', size / 2, size / 2);
+  
+  return canvas;
+}
+
+function downloadIcon(canvas, filename) {
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+function generateAllIcons() {
+  const container = document.getElementById('icons');
+  container.innerHTML = '<h2>Generated Icons:</h2>';
+  
+  sizes.forEach(size => {
+    const canvas = generateIcon(size);
+    const div = document.createElement('div');
+    div.className = 'icon';
+    div.innerHTML = `<p>${size}x${size}</p>`;
+    div.appendChild(canvas);
+    
+    const btn = document.createElement('button');
+    btn.textContent = 'Download';
+    btn.onclick = () => downloadIcon(canvas, `icon-${size}x${size}.png`);
+    div.appendChild(btn);
+    
+    container.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>

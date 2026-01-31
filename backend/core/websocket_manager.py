@@ -43,8 +43,9 @@ class WebSocketConnection:
         self._listen_task: Optional[asyncio.Task] = None
 
     async def connect(self) -> None:
-        """Accept WebSocket connection."""
-        await self.websocket.accept()
+        """Accept WebSocket connection (if not already accepted)."""
+        if self.websocket.client_state.name != "CONNECTED":
+            await self.websocket.accept()
 
     async def disconnect(self) -> None:
         """Clean disconnect - unsubscribe from all channels and close connections."""

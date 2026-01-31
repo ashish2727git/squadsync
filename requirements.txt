@@ -26,9 +26,28 @@ pydantic-settings>=2.1.0
 # Utilities
 python-dotenv>=1.0.0
 
+# AWS S3
+boto3>=1.35.0
+
+# SendGrid Email
+sendgrid>=6.11.0
+
+# Stripe Payments
+stripe>=11.0.0
+
+# Firebase Push Notifications
+firebase-admin>=6.5.0
+
+# Sentry Error Monitoring
+sentry-sdk[fastapi]>=2.0.0
+
+# Twilio Voice/SMS
+twilio>=9.0.0
+
 # Development
 pytest>=7.4.3
 pytest-asyncio>=0.21.1
 httpx>=0.25.2
 email-validator
 PyJWT==2.8.0
+

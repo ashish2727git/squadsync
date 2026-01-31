@@ -449,31 +449,105 @@ async def websocket_endpoint(
                             "message": f"Invalid squad_id format: {squad_id_str}",
                         })
 
-                elif message_type in ["webrtc_offer", "webrtc_answer", "webrtc_ice"]:
-                    # WebRTC signaling events - validate and forward
-                    target_user_id_str = data.get("target_user_id")
-                    if not target_user_id_str:
-                        await connection.send_json({
-                            "type": "error",
-                            "message": f"{message_type} requires 'target_user_id'",
-                        })
+                elif message_type == "whiteboard_draw":
+                    # Whiteboard draw events
+                    action = data.get("action")
+                    if not action:
                         continue
+                    
+                    squad_id_str = data.get("squad_id") or data.get("room_id")
+                    if squad_id_str:
+                        try:
+                            squad_id = UUID(squad_id_str)
+                            redis = await get_redis()
+                            whiteboard_channel = f"squad:{squad_id}:whiteboard"
+                            await redis.publish(whiteboard_channel, {
+                                "type": "whiteboard_draw",
+                                "action": action,
+                                "user_id": str(user.id),
+                                "username": user.username,
+                            })
+                        except ValueError:
+                            pass
 
-                    try:
-                        target_user_id = UUID(target_user_id_str)
-                        # Forward to target user's personal channel
-                        redis = await get_redis()
-                        target_channel = f"user:{target_user_id}:webrtc"
-                        await redis.publish(target_channel, {
-                            **data,
-                            "from_user_id": str(user.id),
-                            "from_username": user.username,
-                        })
-                    except ValueError:
-                        await connection.send_json({
-                            "type": "error",
-                            "message": f"Invalid target_user_id format: {target_user_id_str}",
-                        })
+                elif message_type == "whiteboard_clear":
+                    # Whiteboard clear events
+                    squad_id_str = data.get("squad_id") or data.get("room_id")
+                    if squad_id_str:
+                        try:
+                            squad_id = UUID(squad_id_str)
+                            redis = await get_redis()
+                            whiteboard_channel = f"squad:{squad_id}:whiteboard"
+                            await redis.publish(whiteboard_channel, {
+                                "type": "whiteboard_clear",
+                                "user_id": str(user.id),
+                                "username": user.username,
+                            })
+                        except ValueError:
+                            pass
+
+                elif message_type == "chat_message":
+                    # Squad chat messages
+                    room_id_str = data.get("roomId") or data.get("squad_id")
+                    message_text = data.get("message")
+                    if room_id_str and message_text:
+                        try:
+                            squad_id = UUID(room_id_str)
+                            from backend.core.permissions import can_access_squad
+                            can_access = await can_access_squad(db, user, squad_id)
+                            if can_access:
+                                redis = await get_redis()
+                                chat_channel = f"squad:{squad_id}:chat"
+                                await redis.publish(chat_channel, {
+                                    "type": "chat_message",
+                                    "id": data.get("id", str(user.id)),
+                                    "userId": str(user.id),
+                                    "username": user.username,
+                                    "message": message_text,
+                                    "timestamp": data.get("timestamp"),
+                                })
+                                
+                                # Subscribe to chat if not already
+                                await connection.subscribe_to_channel(chat_channel)
+                        except ValueError:
+                            pass
+
+                elif message_type in ["join_voice_call", "leave_voice_call"]:
+                    # Voice call join/leave events
+                    room_id_str = data.get("roomId") or data.get("squad_id")
+                    if room_id_str:
+                        try:
+                            squad_id = UUID(room_id_str)
+                            redis = await get_redis()
+                            voice_channel = f"squad:{squad_id}:voice"
+                            await redis.publish(voice_channel, {
+                                "type": message_type,
+                                "userId": str(user.id),
+                                "username": user.username,
+                                "roomId": str(squad_id),
+                            })
+                            
+                            # Subscribe to voice channel
+                            if message_type == "join_voice_call":
+                                await connection.subscribe_to_channel(voice_channel)
+                        except ValueError:
+                            pass
+
+                elif message_type in ["webrtc_offer", "webrtc_answer", "webrtc_ice_candidate"]:
+                    # WebRTC signaling events
+                    target_user_id_str = data.get("targetUserId")
+                    if target_user_id_str:
+                        try:
+                            target_user_id = UUID(target_user_id_str)
+                            redis = await get_redis()
+                            target_channel = f"user:{target_user_id}:notifications"
+                            await redis.publish(target_channel, {
+                                **data,
+                                "fromUserId": str(user.id),
+                                "fromUsername": user.username,
+                            })
+                        except ValueError:
+                            pass
 
                 else:
                     await connection.send_json({
