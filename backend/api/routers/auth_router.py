@@ -271,3 +271,54 @@ async def get_current_user_info(
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
     )
+
+
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class ProfileUpdateRequest(BaseModel):
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    bio: Optional[str] = Field(None, max_length=200)
+    avatar_url: Optional[str] = None
+
+
+@router.put(
+    "/me",
+    response_model=UserResponse,
+    summary="Update user profile",
+    description="Update the current user's profile information.",
+)
+async def update_profile(
+    request: ProfileUpdateRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> UserResponse:
+    """
+    Update current user's profile.
+    """
+    if request.username and request.username != current_user.username:
+        # Check if username is taken
+        stmt = select(User).where(User.username == request.username)
+        result = await db.execute(stmt)
+        existing = result.scalar_one_or_none()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken",
+            )
+        current_user.username = request.username
+
+    # Note: bio and avatar_url would need to be added to User model
+    # For now, just update username
+    
+    await db.commit()
+    await db.refresh(current_user)
+
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        role=current_user.role.value,
+        is_active=current_user.is_active,
+        is_verified=current_user.is_verified,
+    )

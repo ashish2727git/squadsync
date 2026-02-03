@@ -11,7 +11,7 @@ export function useWebSocket(onMessage?: (message: WebSocketMessage) => void) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 3;
+  const maxReconnectAttempts = 10;  // Increased from 3 to 10
   const { accessToken } = useAuthStore();
 
   const connect = useCallback(() => {

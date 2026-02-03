@@ -26,6 +26,9 @@ pydantic-settings>=2.1.0
 # Utilities
 python-dotenv>=1.0.0
 
+# Analytics
+mixpanel>=4.10.0
+
 # AWS S3
 boto3>=1.35.0
 
@@ -50,4 +53,3 @@ pytest-asyncio>=0.21.1
 httpx>=0.25.2
 email-validator
 PyJWT==2.8.0
-

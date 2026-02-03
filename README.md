@@ -1,130 +1,87 @@
-# SquadSync - Tactical Gaming Operations Platform
+# SquadSync
 
-Production-grade platform for managing gaming squads, teams, and organizations with real-time collaboration features.
+Real-time gaming squad coordination platform with voice chat, whiteboard, and team management.
 
-## 🚀 Quick Start
+## Quick Start
 
-### Using Docker (Recommended)
-
-```bash
-# Set JWT secret
-export JWT_SECRET_KEY="your-super-secret-key-minimum-32-characters-long"
-
-# Start all services
-docker-compose up -d
-
-# Run migrations
-docker-compose exec backend alembic upgrade head
-
-# Access application
-# Frontend: http://localhost:3000
-# API Docs: http://localhost:8000/docs
-```
-
-### Manual Setup
-
-See [GETTING_STARTED.md](GETTING_STARTED.md) for detailed instructions.
-
-## 📚 Documentation
-
-### For Users
-- **[USER_GUIDE.md](USER_GUIDE.md)** - Complete user manual
-- **[FEATURES_COMPLETE.md](FEATURES_COMPLETE.md)** - Full feature list
-
-### For Developers
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Complete API reference
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deployment instructions
-- **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** - Configuration guide
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture details
-- **[PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)** - Pre-launch checklist
-- **[COMPLETION_SUMMARY.md](COMPLETION_SUMMARY.md)** - Final implementation summary
-
-## ✨ Features
-
-### Core Functionality
-- **Authentication** - JWT-based auth with refresh tokens
-- **Organization Management** - Create and manage gaming organizations
-- **Team Management** - Game-specific teams with full CRUD
-- **Squad Management** - Create, join, leave tactical squads
-- **Summon System** - Real-time urgent notifications with urgency levels
-- **Player Vault** - Private storage for loadouts, clips, achievements, notes
-- **Scheduling** - Squad events and daily goals with full management
-- **War Room** - Collaborative whiteboard + WebRTC voice chat
-- **WebSocket** - Real-time updates via Redis Pub/Sub
-
-### User Experience
-- **Onboarding Flow** - 3-step wizard for new users
-- **Dashboard** - Central hub with squad overview and active summons
-- **Profile Management** - User settings and preferences
-- **Responsive Design** - Mobile-friendly on all devices
-- **Real-time Updates** - Instant notifications and WebSocket sync
-
-## 🏗️ Architecture
-
-- **Backend:** FastAPI, SQLAlchemy (async), PostgreSQL, Redis
-- **Frontend:** React, TypeScript, Vite
-- **Real-time:** WebSocket, WebRTC
-- **Deployment:** Docker, docker-compose
-
-## 🔒 Security
-
-- Production-grade JWT authentication
-- Password hashing (bcrypt)
-- Rate limiting (Redis-based)
-- Input sanitization
-- Permission enforcement
-- No development bypasses
-
-## 📋 Requirements
-
+### Prerequisites
 - Python 3.10+
 - Node.js 18+
 - PostgreSQL
-- Redis (optional, for real-time features)
+- Redis
 
-## 🛠️ Development
+### Development Setup
 
 ```bash
 # Backend
 pip install -r requirements.txt
 python run_server.py
 
-# Frontend
+# Frontend (new terminal)
 cd frontend
 npm install
 npm run dev
 ```
 
-## 📖 API Documentation
+Access:
+- Frontend: http://localhost:3000
+- API Docs: http://localhost:8000/docs
 
-Interactive API documentation available at `/docs` when server is running.
-
-## 📝 License
-
-[Your License Here]
-
-## 🤝 Contributing
-
-[Contributing Guidelines]
-
----
-
-**Status:** 100% Complete & Production-Ready ✅
-
-### What's New
-- ✅ Complete organization/team/squad hierarchy
-- ✅ Full frontend with Dashboard, Vault, Profile, Onboarding
-- ✅ Real-time WebSocket integration
-- ✅ Mobile-responsive design
-- ✅ Comprehensive user documentation
-- ✅ Production-grade security and performance
-
-### First-Time Setup
+### First Time Setup
 1. Register at http://localhost:3000/register
-2. Complete 3-step onboarding wizard:
-   - Create Organization (e.g., "Elite Gamers")
-   - Create Team (e.g., "Valorant Pro Team")
-   - Create Squad (e.g., "Alpha Squad")
-3. Start using all features immediately!
+2. Complete onboarding (create Organization → Team → Squad)
+3. Start using features
 
-For detailed information, see the documentation files listed above.
+## Features
+
+- **Authentication** - JWT-based with refresh tokens
+- **Squad Management** - Create, join, leave squads
+- **Summon System** - Real-time urgent notifications
+- **War Room** - Collaborative whiteboard + voice chat (WebRTC)
+- **Player Vault** - Private storage for loadouts, clips, notes
+- **Scheduling** - Squad events and daily goals
+- **Real-time** - WebSocket updates via Redis
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Backend | FastAPI, SQLAlchemy (async), PostgreSQL, Redis |
+| Frontend | React, TypeScript, Vite, Zustand |
+| Real-time | WebSocket, WebRTC |
+
+## Documentation
+
+- [API Documentation](API_DOCUMENTATION.md) - Complete API reference
+- [Architecture](ARCHITECTURE.md) - System design and patterns
+- [Environment Variables](ENVIRONMENT_VARIABLES.md) - Configuration guide
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/squadsync
+REDIS_URL=redis://localhost:6379/0
+JWT_SECRET_KEY=your-secret-key-minimum-32-characters
+```
+
+See [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) for all options.
+
+## Project Structure
+
+```
+backend/
+├── api/routers/     # API endpoints
+├── api/gateway/     # WebSocket gateway
+├── core/            # Auth, config, security
+├── services/        # Business logic
+├── models/          # Database models
+└── main.py
+
+frontend/
+├── src/components/  # React components
+├── src/pages/       # Page components
+├── src/hooks/       # Custom hooks
+└── src/stores/      # Zustand stores
+```

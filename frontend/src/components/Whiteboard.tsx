@@ -86,20 +86,23 @@ export function Whiteboard({ socket, userId, username, width, height }: Whiteboa
     ctx.lineTo(pos.x, pos.y)
     ctx.stroke()
 
-    socket.send(JSON.stringify({
-      type: 'whiteboard_draw',
-      action: {
-        type: 'draw',
-        x: pos.x,
-        y: pos.y,
-        prevX: lastPos.x,
-        prevY: lastPos.y,
-        color,
-        lineWidth,
-        userId,
-        username
-      }
-    }))
+    // Only send if WebSocket is open and ready
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: 'whiteboard_draw',
+        action: {
+          type: 'draw',
+          x: pos.x,
+          y: pos.y,
+          prevX: lastPos.x,
+          prevY: lastPos.y,
+          color,
+          lineWidth,
+          userId,
+          username
+        }
+      }))
+    }
 
     setLastPos(pos)
   }
@@ -135,10 +138,13 @@ export function Whiteboard({ socket, userId, username, width, height }: Whiteboa
 
   const handleClear = () => {
     clearCanvas()
-    socket.send(JSON.stringify({
-      type: 'whiteboard_clear',
-      userId
-    }))
+    // Only send if WebSocket is open and ready
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: 'whiteboard_clear',
+        userId
+      }))
+    }
   }
 
   return (

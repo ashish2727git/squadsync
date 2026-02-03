@@ -42,6 +42,10 @@ from backend.api.routers import (
     organization_router,
     upload_router,
     webrtc_router,
+    role_router,
+    oauth_router,
+    message_router,
+    dm_router,
 )
 from backend.api.gateway import websocket_gateway
 
@@ -68,6 +72,21 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting SquadSync application...")
     logger.info(f"Environment: {ENVIRONMENT}")
     
+    # Initialize Sentry error monitoring
+    try:
+        from backend.core.sentry_monitoring import init_sentry
+        init_sentry()
+    except Exception as e:
+        logger.warning(f"⚠️  Sentry initialization failed: {e}")
+    
+    # Initialize Firebase
+    try:
+        from backend.core.firebase_service import get_firebase_service
+        firebase = get_firebase_service()
+        firebase.initialize()
+    except Exception as e:
+        logger.warning(f"⚠️  Firebase initialization failed: {e}")
+    
     # Initialize Redis connection
     try:
         redis = await get_redis()
@@ -91,6 +110,9 @@ async def lifespan(app: FastAPI):
     from backend.api.gateway.websocket_gateway import set_websocket_manager_factory
     set_websocket_manager_factory(lambda: _websocket_manager)
     
+    logger.info("✅ All services initialized")
+    logger.info("📊 Visit http://localhost:8000/docs for API documentation")
+    
     yield
     
     # Shutdown
@@ -113,6 +135,15 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Redis disconnected")
     except Exception as e:
         logger.error(f"Error disconnecting Redis: {e}")
+    
+    # Close OAuth service
+    try:
+        from backend.core.oauth_service import get_oauth_service
+        oauth = get_oauth_service()
+        await oauth.close()
+        logger.info("✅ OAuth service closed")
+    except Exception as e:
+        logger.error(f"Error closing OAuth service: {e}")
 
 
 # Create FastAPI app
@@ -155,14 +186,18 @@ async def global_exception_handler(request, exc):
 
 # Include routers
 app.include_router(auth_router.router)  # Auth endpoints
+app.include_router(oauth_router.router)  # OAuth endpoints
 app.include_router(organization_router.router)  # Organization management
 app.include_router(team_router.router)  # Team management
 app.include_router(squad_router.router)  # Squad management
-app.include_router(summon_router.router, prefix="/api/v1")  # Summon system
-app.include_router(squad_schedule_router.router, prefix="/api/v1")  # Schedule/events
+app.include_router(summon_router.router)  # Summon system
+app.include_router(squad_schedule_router.router)  # Schedule/events
 app.include_router(vault_router.router)  # Vault endpoints
+app.include_router(role_router.router)  # Role management
 app.include_router(upload_router.router, prefix="/api/v1")  # File uploads
 app.include_router(webrtc_router.router, prefix="/api/v1")  # WebRTC configuration
+app.include_router(message_router.router)  # Messages & Channels
+app.include_router(dm_router.router)  # Direct Messages
 app.include_router(websocket_gateway.router)  # WebSocket gateway
 
 # Health check endpoints

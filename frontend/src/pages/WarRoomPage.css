@@ -1,6 +1,6 @@
 .war-room-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #36393f;
   display: flex;
   flex-direction: column;
 }
@@ -9,203 +9,365 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  color: white;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 20px;
+  background: #2f3136;
+  border-bottom: 1px solid #202225;
 }
 
-.war-room-header h1 {
-  margin: 0;
-  font-size: 1.8rem;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.war-room-header a {
-  color: white;
+.back-link {
+  color: #b9bbbe;
   text-decoration: none;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.back-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-info h1 {
+  margin: 0;
+  font-size: 18px;
   font-weight: 600;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  transition: all 0.2s;
+  color: #fff;
 }
 
-.war-room-header a:hover {
-  background: rgba(255, 255, 255, 0.3);
+.connection-badge span {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 10px;
 }
 
-.connection-status {
-  font-weight: 600;
+.connection-badge .connected {
+  color: #43b581;
+  background: rgba(67, 181, 129, 0.1);
 }
 
-.status-connected {
-  color: #10b981;
+.connection-badge .disconnected {
+  color: #faa61a;
+  background: rgba(250, 166, 26, 0.1);
 }
 
-.status-disconnected {
-  color: #ef4444;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+.online-members {
+  display: flex;
+  align-items: center;
+}
+
+.online-members .user-status-badge {
+  margin-left: -8px;
+}
+
+.online-members .user-status-badge:first-child {
+  margin-left: 0;
+}
+
+.more-members {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #b9bbbe;
+  background: #4f545c;
+  padding: 4px 8px;
+  border-radius: 10px;
+}
+
+/* Main Layout */
 .war-room-main {
   flex: 1;
-  padding: 2rem;
+  padding: 16px;
   overflow: hidden;
 }
 
 .war-room-grid {
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 1.5rem;
-  height: 100%;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  height: calc(100vh - 100px);
+}
+
+/* Main Content */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
 }
 
 .whiteboard-section {
+  flex: 1;
+  background: #2f3136;
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
-.whiteboard-section h2 {
-  color: white;
+.section-header {
+  padding: 16px;
+  border-bottom: 1px solid #40444b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-header h2 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
 }
 
+.section-hint {
+  font-size: 12px;
+  color: #72767d;
+}
+
+.loading-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #72767d;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #40444b;
+  border-top-color: #5865f2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Sidebar */
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  height: 100%;
+  gap: 12px;
+  overflow: hidden;
 }
 
-.voice-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.members-section {
+  background: #2f3136;
+  border-radius: 8px;
+  padding: 12px;
 }
 
-.voice-section h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-  color: #333;
+.members-section h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #8e9297;
 }
 
-.voice-controls {
+.members-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 4px;
+  max-height: 150px;
+  overflow-y: auto;
 }
 
-.btn-start-call,
-.btn-mute,
-.btn-end-call {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-start-call {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-}
-
-.btn-start-call:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.btn-mute {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-}
-
-.btn-mute.muted {
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-}
-
-.btn-mute:hover {
-  transform: translateY(-2px);
-}
-
-.btn-end-call {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-}
-
-.btn-end-call:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-.participants {
-  margin-top: 1rem;
-}
-
-.participants h3 {
-  font-size: 0.9rem;
-  color: #6b7280;
-  margin: 0 0 0.75rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.participant-item {
+/* Sidebar Tabs */
+.sidebar-tabs {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem;
-  background: #f9fafb;
+  background: #2f3136;
   border-radius: 8px;
-  margin-bottom: 0.5rem;
+  padding: 4px;
 }
 
-.participant-name {
-  font-weight: 500;
-  color: #333;
+.sidebar-tabs .tab {
+  flex: 1;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #72767d;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-.status-indicator {
-  font-size: 1.2rem;
+.sidebar-tabs .tab:hover {
+  color: #dcddde;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.remote-audio {
-  display: none;
+.sidebar-tabs .tab.active {
+  background: #40444b;
+  color: #fff;
 }
 
+/* Chat Section */
 .chat-section {
   flex: 1;
-  min-height: 0;
+  min-height: 300px;
+  overflow: hidden;
+  border-radius: 8px;
 }
 
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  background: white;
-  border-radius: 12px;
-  color: #6b7280;
-  font-size: 1.1rem;
+.offline-message {
+  padding: 32px;
+  text-align: center;
+  color: #72767d;
+  background: #2f3136;
+  border-radius: 8px;
 }
 
+/* Responsive */
 @media (max-width: 1200px) {
+  .war-room-grid {
+    grid-template-columns: 1fr 320px;
+  }
+}
+
+@media (max-width: 900px) {
   .war-room-grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
 
   .sidebar {
-    grid-row: 1;
+    order: -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
   }
 
-  .whiteboard-section {
-    grid-row: 2;
+  .members-section {
+    flex: 1;
+    min-width: 200px;
   }
+
+  .sidebar-tabs {
+    width: 100%;
+  }
+
+  .chat-section {
+    width: 100%;
+    min-height: 250px;
+  }
+}
+
+/* Legacy styles for old components */
+.status-connected {
+  color: #43b581;
+  font-size: 14px;
+}
+
+.status-disconnected {
+  color: #f04747;
+  font-size: 14px;
+}
+
+.voice-section {
+  background: #2f3136;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.voice-section h2 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #8e9297;
+  text-transform: uppercase;
+}
+
+.voice-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.btn-start-call,
+.btn-mute,
+.btn-end-call {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-start-call {
+  background: #43b581;
+  color: white;
+}
+
+.btn-start-call:hover {
+  background: #3ca374;
+}
+
+.btn-mute {
+  background: #4f545c;
+  color: white;
+}
+
+.btn-mute.muted {
+  background: #f04747;
+}
+
+.btn-end-call {
+  background: #f04747;
+  color: white;
+}
+
+.participants h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #72767d;
+}
+
+.participant-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.participant-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.participant-name {
+  flex: 1;
+  color: #dcddde;
+  font-size: 14px;
+}
+
+.status-indicator {
+  font-size: 14px;
 }

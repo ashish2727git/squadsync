@@ -123,7 +123,7 @@ export function SquadDetailPage() {
           <div className="hero-actions">
             <button 
               className="btn btn-primary btn-lg" 
-              onClick={() => navigate(`/squads/${squadId}/warroom`)}
+              onClick={() => navigate(`/squads/${squadId}/war-room`)}
             >
               <span>🎨</span>
               <span>Enter War Room</span>

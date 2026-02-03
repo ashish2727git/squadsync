@@ -1,0 +1,182 @@
+.voice-panel-inactive {
+  background: #2f3136;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.voice-channel-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8e9297;
+  font-size: 14px;
+}
+
+.voice-icon {
+  font-size: 18px;
+}
+
+.join-voice-btn {
+  background: #43b581;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.join-voice-btn:hover {
+  background: #3ca374;
+}
+
+.voice-members-preview {
+  font-size: 12px;
+  color: #72767d;
+}
+
+/* Active Call Panel */
+.voice-call-panel {
+  background: #292b2f;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.call-header {
+  background: #43b581;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.call-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.call-status {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.call-duration {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.call-participants {
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.participant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.participant:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.participant.speaking {
+  background: rgba(67, 181, 129, 0.2);
+}
+
+.participant.speaking .participant-avatar {
+  box-shadow: 0 0 0 3px #43b581;
+}
+
+.participant-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+  position: relative;
+}
+
+.muted-icon {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #f04747;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.participant-name {
+  color: #dcddde;
+  font-size: 12px;
+  text-align: center;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.call-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #202225;
+}
+
+.control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #4f545c;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.control-btn:hover {
+  background: #5d6269;
+}
+
+.control-btn.active {
+  background: #f04747;
+}
+
+.control-btn.leave-btn {
+  background: #f04747;
+  transform: rotate(135deg);
+}
+
+.control-btn.leave-btn:hover {
+  background: #d84040;
+}

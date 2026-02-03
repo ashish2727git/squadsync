@@ -361,7 +361,7 @@ async def leave_squad(
 ) -> dict:
     """Leave a squad."""
     
-    if not await can_access_squad(db, current_user.id, squad_id):
+    if not await can_access_squad(db, current_user, squad_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not a member of this squad"

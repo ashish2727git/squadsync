@@ -273,7 +273,7 @@ export function DashboardPage() {
                       </button>
                       <button 
                         className="btn btn-secondary btn-sm"
-                        onClick={() => navigate(`/squads/${squad.id}/warroom`)}
+                        onClick={() => navigate(`/squads/${squad.id}/war-room`)}
                       >
                         <span>🎨</span>
                         <span>War Room</span>

@@ -6,7 +6,6 @@ Production-grade configuration with strict validation.
 import os
 import sys
 import warnings
-print("DEBUG REDIS_URL =", os.environ.get("REDIS_URL"))
 
 # Environment - must be one of: development, staging, production
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
@@ -78,3 +77,44 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 RATE_LIMIT_REQUESTS_PER_MINUTE = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "60"))
 RATE_LIMIT_REQUESTS_PER_HOUR = int(os.getenv("RATE_LIMIT_REQUESTS_PER_HOUR", "1000"))
 RATE_LIMIT_REQUESTS_PER_DAY = int(os.getenv("RATE_LIMIT_REQUESTS_PER_DAY", "10000"))
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET")
+
+# SendGrid Email Configuration
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "noreply@squadsync.com")
+
+# Sentry Error Monitoring
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+
+# Firebase Cloud Messaging
+FIREBASE_CREDENTIALS_PATH = os.getenv("FIREBASE_CREDENTIALS_PATH")
+
+# Stripe Payment Configuration
+STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+# Analytics Configuration
+MIXPANEL_TOKEN = os.getenv("MIXPANEL_TOKEN")
+GOOGLE_ANALYTICS_ID = os.getenv("GOOGLE_ANALYTICS_ID")
+
+# OAuth Configuration
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+
+# Twilio TURN Server Configuration
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+
+# Cloudflare Configuration
+CLOUDFLARE_ZONE_ID = os.getenv("CLOUDFLARE_ZONE_ID")
+CLOUDFLARE_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN")
+
+# Frontend URL (for emails, OAuth redirects, etc.)
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
